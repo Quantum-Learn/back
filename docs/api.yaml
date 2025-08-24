@@ -1,0 +1,445 @@
+openapi: 3.0.0
+info:
+  title: IT Learning Platform API
+  version: 1.0.0
+  description: API для обучающей платформы IT-курсов
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+
+  # ====== Авторизация ======
+  /auth/register:
+    post:
+      tags:
+        - Авторизация
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь зарегистрирован
+        '400':
+          description: Ошибка в данных
+
+  /auth/login:
+    post:
+      tags:
+        - Авторизация
+      summary: Вход пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Неверный логин или пароль
+  /auth/logout:          
+    post:
+      tags:
+        - Авторизация
+      summary: Выход пользователя (инвалидировать токен)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+  /users/me:
+    get:
+      tags:
+        - Личный кабинет    
+      summary: Получение профиля текущего пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - Авторизация
+      summary: Сброс пароля (отправка ссылки на email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      responses:
+        '200':
+          description: Инструкция отправлена на почту
+
+  /auth/confirm-email:
+    get:
+      tags:
+        - Авторизация
+      summary: Подтверждение email по токену
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email успешно подтвержден
+        '400':
+          description: Неверный или устаревший токен
+  # ====== Личный кабинет ====== 
+  /users/me/password:
+    patch:
+      tags:
+        - Личный кабинет
+      summary: Изменение пароля текущего пользователя
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+              required:
+                - oldPassword
+                - newPassword
+      responses:
+        '200':
+          description: Пароль успешно изменен
+
+  /users/me/update:
+    patch:
+      tags:
+        - Личный кабинет
+      summary: Обновление данных текущего пользователя
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Данные обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users:
+    get:
+      tags:
+        - Личный кабинет
+      summary: Получение всех пользователей (только для админов)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      tags:
+        - Личный кабинет
+      summary: Создание пользователя администратором
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь создан админом
+
+  /users/{id}:
+    get:
+      tags:
+        - Личный кабинет
+      summary: Получение данных пользователя по ID (только для админов)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+
+  /users/me/delete:
+   delete:
+    tags:
+      - Личный кабинет     
+    summary: Удаление пользователя
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: Пользователь успешно удален
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+  /courses:
+    get:
+      tags:
+      - Курсы
+      summary: Список курсов
+      responses:
+        '200':
+          description: Список курсов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    post:
+      tags:
+      - Курсы   
+      summary: Создание курса (только для админов)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreateRequest'
+      responses:
+        '201':
+          description: Курс создан
+  # ====== Курсы ======
+  /courses/{courseId}/landing:
+    get:
+      tags:
+        - Курсы
+      summary: Лендинг страница курсов
+      parameters:
+        - in: path
+          name: courseId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список популярных курсов + баннеры
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  featuredCourses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+                  banners:
+                    type: array
+                    items:
+                      type: string
+
+  /courses/{courseId}/sidebar:
+    get:
+      tags:
+        - Курсы
+      summary: Сайдбар курса (список страниц в порядке)
+      parameters:
+        - in: path
+          name: courseId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список страниц курса для сайдбара
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoursePage'  
+  /courses/{courseId}/modules:
+    get:
+      tags:
+        - Курсы    
+      summary: Модули курса
+      parameters:
+        - in: path
+          name: courseId   # исправил id → courseId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Модули курса
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    order:
+                      type: integer
+
+  /courses/{courseId}/pages:
+    get:
+      tags:
+      - Курсы    
+      summary: Список страниц курса
+      parameters:
+        - in: path
+          name: courseId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список страниц курса
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoursePage'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+      required:
+        - email
+        - password
+        - name
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+
+    CourseCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+      required:
+        - title
+
+    CoursePage:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        order:
+          type: integer
+      required:
+        - id
+        - title
+        - content
+        - order
+    Role:
+      type: string
+      enum: [user, admin, superadmin]
