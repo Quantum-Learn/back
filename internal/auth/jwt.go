@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -19,6 +20,7 @@ func GenerateToken(userID int) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   strconv.Itoa(userID), // <--- добавляем!
 			ExpiresAt: jwt.NewNumericDate(exp),
 		},
 	}

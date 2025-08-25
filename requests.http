@@ -1,0 +1,22 @@
+### Регистрация
+POST http://localhost:8080/auth/register
+Content-Type: application/json
+
+{
+  "email": "a@a.com",
+  "password": "pass",
+  "name": "Alice"
+}
+
+### Логин
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "a@a.com",
+  "password": "pass"
+}
+
+### Текущий пользователь (замени {{token}})
+GET http://localhost:8080/users/me
+Authorization: Bearer {{token}}

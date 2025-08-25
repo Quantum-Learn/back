@@ -7,9 +7,9 @@ import (
 )
 
 type UserStore interface {
-	Create(ctx context.Context, user api.User) (int64, error)
+	Create(ctx context.Context, user api.User) (int, error)
 	GetByEmail(ctx context.Context, email string) (*api.User, error)
-	GetByID(ctx context.Context, id int64) (*api.User, error)
+	GetByID(ctx context.Context, id int) (*api.User, error) // <-- int
 }
 
 type InMemoryUserStore struct {

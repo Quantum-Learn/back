@@ -18,13 +18,13 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		token := strings.TrimPrefix(h, "Bearer ")
+
 		claims, err := ValidateToken(token)
 		if err != nil {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
-		// userID у нас в Subject (строка)
-		ctx := context.WithValue(r.Context(), UserIDKey, claims.Subject)
+		ctx := context.WithValue(r.Context(), UserIDKey, claims.Subject) // sub = userID (string)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
